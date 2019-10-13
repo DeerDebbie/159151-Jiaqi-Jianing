@@ -13,13 +13,11 @@ import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;  
 import java.awt.event.MouseAdapter;  
 import java.awt.event.MouseEvent;  
-import java.io.BufferedReader;  
-import java.io.BufferedWriter;  
+import java.io.BufferedReader;    
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;  
-import java.io.FileWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -58,7 +56,8 @@ import javax.swing.JTextField;
 import javax.swing.JToolBar;  
 import javax.swing.KeyStroke;
 import javax.swing.Timer;
-import javax.swing.WindowConstants;   
+import javax.swing.WindowConstants;
+ 
 @SuppressWarnings("serial")  
 public class Texteditor extends JFrame {  
     // 添加属性  
@@ -143,7 +142,7 @@ public class Texteditor extends JFrame {
         checkb_bold.addActionListener(new ActionListener() {  
             public void actionPerformed(ActionEvent e) {  
                 String fontname = (String)combox_name.getSelectedItem();//获得字体名  
-                Font font = ta.getFont();     //获得文本区的当前字体对象  jj
+                Font font = ta.getFont();     //获得文本区的当前字体对象  
                 int style = font.getStyle();      //获得字形  
                 int size = font.getSize();  
                 style = style ^ 1;  
@@ -222,7 +221,10 @@ public class Texteditor extends JFrame {
         JMenuItem menuitem_open = new JMenuItem("打开");  
         menu[0].add(menuitem_open);  
         menuitem_open.addActionListener(new ActionListener() {  
-            public void actionPerformed(ActionEvent e) {  
+            public void actionPerformed(ActionEvent e) { 
+         
+           
+
                 JFileChooser filechooser = new JFileChooser();  
                 int result = filechooser.showOpenDialog(Texteditor.this);  
                 if (result == JFileChooser.APPROVE_OPTION) {  
@@ -242,7 +244,7 @@ public class Texteditor extends JFrame {
                         JOptionPane.showMessageDialog(Texteditor.this,"打开文档出错！");  
                     }  
                 }  
-           
+                
             
             }  
         });  
@@ -267,6 +269,28 @@ public class Texteditor extends JFrame {
   
             }  
         });  
+        JMenuItem menuitem_save1 = new JMenuItem("保存为PDF");  
+        menu[0].add(menuitem_save1);  
+        menuitem_save1.addActionListener(new ActionListener() {  
+            public void actionPerformed(ActionEvent e) {  
+            	int i=filechooser.showSaveDialog(Texteditor.this);
+    			if(i==JFileChooser.APPROVE_OPTION)
+    			{
+    				File f=filechooser.getSelectedFile();
+    				try				
+    				{
+    					FileOutputStream out=new FileOutputStream(f);
+    					out.write(ta.getText().getBytes());
+    				}
+    				catch(Exception ex)
+    				{					 
+    					ex.printStackTrace();
+    				}			
+    			}
+  
+            }  
+        });  
+        
         menu[0].addSeparator(); // 加分隔线  
         JMenuItem menuitem_exit = new JMenuItem("退出");  
         menu[0].add(menuitem_exit);  
