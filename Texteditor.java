@@ -2,7 +2,8 @@ package edit;
   
 
 import java.awt.BorderLayout;  
-import java.awt.Color;  
+import java.awt.Color;
+import java.awt.Container;
 import java.awt.Dimension;  
 import java.awt.Font;  
 import java.awt.GraphicsEnvironment;  
@@ -23,6 +24,21 @@ import java.util.Date;
 import com.itextpdf.text.Document;
 import com.itextpdf.text.Paragraph;
 import com.itextpdf.text.pdf.PdfWriter;
+import com.sun.glass.ui.Menu;
+import com.sun.glass.ui.MenuItem;
+
+import edit.ColorEdit.AboutAction;
+import edit.ColorEdit.CopyAction;
+import edit.ColorEdit.CutAction;
+import edit.ColorEdit.ExitAction;
+import edit.ColorEdit.HelpAction;
+import edit.ColorEdit.NewAction;
+import edit.ColorEdit.OpenAction;
+import edit.ColorEdit.PasteAction;
+import edit.ColorEdit.PrintAction;
+import edit.ColorEdit.SaveAction;
+import edit.ColorEdit.SearchAction;
+
 import javax.print.Doc;
 import javax.print.DocFlavor;
 import javax.print.DocPrintJob;
@@ -33,6 +49,7 @@ import javax.print.SimpleDoc;
 import javax.print.attribute.DocAttributeSet;
 import javax.print.attribute.HashDocAttributeSet;
 import javax.print.attribute.HashPrintRequestAttributeSet;
+import javax.swing.Action;
 import javax.swing.ButtonGroup;  
 import javax.swing.ImageIcon;  
 import javax.swing.JButton;  
@@ -62,66 +79,92 @@ import javax.swing.WindowConstants;
  
 @SuppressWarnings("serial")  
 public class Texteditor extends JFrame {  
-    // æ·»åŠ å±æ€§  
-    private JComboBox combox_name, combox_size;// å­—ä½“ã€å­—å·ç»„åˆæ¡†  
-    private JButton button_larger,button_smaller,button_color;//å­—ä½“å˜å¤§å˜å°å’Œé¢œè‰²é€‰æ‹©å™¨  
-    private JCheckBox checkb_bold, checkb_italic;// ç²—ä½“ã€æ–œä½“å¤é€‰æ¡†  
+	public JTextArea  open(BufferedReader br,JTextArea ta) { 
+             ta.setText("");  
+             String text;  
+             while ((text = br.readLine()) != null) {  
+                 ta.append(text); 
+                 ta.append("\n"); 
+                 return ta;
+         }  
+	}
+	public FileOutputStream save(FileOutputStream out,JTextArea ta) {
+			out.write(ta.getText().getBytes());
+			return out;
+	}
+	public int search(String str_search,JTextArea ta) {
+		 
+        int len = str_search.length();  
+        for (int i = key; i < ta.getText().length() - len + 1; i++) {  
+            String str_record = ta.getText().substring(i, i + len);  
+            if (str_record.equals(str_search)) {  
+                key = i + 1;  
+                ta.requestFocus();  
+                ta.select(i, i + len);  
+                   return key; 
+                   }
+            }
+	}
+    // Ìí¼ÓÊôĞÔ  
+    private JComboBox combox_name, combox_size;// ×ÖÌå¡¢×ÖºÅ×éºÏ¿ò  
+    private JButton button_larger,button_smaller,button_color;//×ÖÌå±ä´ó±äĞ¡ºÍÑÕÉ«Ñ¡ÔñÆ÷  
+    private JCheckBox checkb_bold, checkb_italic;// ´ÖÌå¡¢Ğ±Ìå¸´Ñ¡¿ò  
     private JPopupMenu popupmenu;  
     private JTextArea ta = new JTextArea();  
     private JScrollPane sp = new JScrollPane(ta); 
-    public JFileChooser filechooser = new JFileChooser(); //æ–‡ä»¶é€‰æ‹©å™¨
-    //æŸ¥æ‰¾å¯¹è¯æ¡†å±æ€§  
+    public JFileChooser filechooser = new JFileChooser(); //ÎÄ¼şÑ¡ÔñÆ÷
+    //²éÕÒ¶Ô»°¿òÊôĞÔ  
     private JTextField tf_search;  
     private JButton button_next;  
     //  
     private int key=0;  
   
     public  Texteditor(String str) {  
-        super(str);  
+        super(str);
         this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);  
-        Dimension dim = getToolkit().getScreenSize(); // è·å¾—å±å¹•åˆ†è¾¨ç‡  
+        Dimension dim = getToolkit().getScreenSize(); // »ñµÃÆÁÄ»·Ö±æÂÊ  
         this.setBounds(dim.width / 4, dim.height / 4, 700, 480);  
 
-        JToolBar toolbar = new JToolBar(); // åˆ›å»ºå·¥å…·æ   
-        this.add(toolbar, BorderLayout.NORTH); // å·¥å…·æ æ·»åŠ åˆ°çª—æ ¼åŒ—éƒ¨  
+        JToolBar toolbar = new JToolBar(); // ´´½¨¹¤¾ßÀ¸  
+        this.add(toolbar, BorderLayout.NORTH); // ¹¤¾ßÀ¸Ìí¼Óµ½´°¸ñ±±²¿  
         this.add(sp);  
-        ta.setLineWrap(true);// æ¢è¡Œ  
-        //////////////////å­—ä½“  
+        ta.setLineWrap(true);// »»ĞĞ  
+        //////////////////×ÖÌå  
         GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();  
-        String[] fontsName = ge.getAvailableFontFamilyNames(); // è·å¾—ç³»ç»Ÿå­—ä½“  
+        String[] fontsName = ge.getAvailableFontFamilyNames(); // »ñµÃÏµÍ³×ÖÌå  
         combox_name = new JComboBox(fontsName);  
         toolbar.add(combox_name);  
-        combox_name.addActionListener(new ActionListener() {// å­—å·  
+        combox_name.addActionListener(new ActionListener() {// ×ÖºÅ  
             public void actionPerformed(ActionEvent e) {  
-                String fontname = (String)combox_name.getSelectedItem();//è·å¾—å­—ä½“å  
-                Font font = ta.getFont();     //è·å¾—æ–‡æœ¬åŒºçš„å½“å‰å­—ä½“å¯¹è±¡  
-                int style = font.getStyle();      //è·å¾—å­—å½¢  
+                String fontname = (String)combox_name.getSelectedItem();//»ñµÃ×ÖÌåÃû  
+                Font font = ta.getFont();     //»ñµÃÎÄ±¾ÇøµÄµ±Ç°×ÖÌå¶ÔÏó  
+                int style = font.getStyle();      //»ñµÃ×ÖĞÎ  
                 int size = font.getSize();  
                 ta.setFont(new Font(fontname, style, size));  
             }  
         });  
-        /////////////////å­—å·  
+        /////////////////×ÖºÅ  
         String sizestr[] = { "20", "30", "40", "50", "60", "70" ,"80","90","100"};  
         combox_size = new JComboBox(sizestr);  
         combox_size.setEditable(true);  
         toolbar.add(combox_size);  
-        combox_size.addActionListener(new ActionListener() {// å­—å·  
+        combox_size.addActionListener(new ActionListener() {// ×ÖºÅ  
             public void actionPerformed(ActionEvent e) {  
-                String fontname = (String)combox_name.getSelectedItem();//è·å¾—å­—ä½“å  
+                String fontname = (String)combox_name.getSelectedItem();//»ñµÃ×ÖÌåÃû  
                 int size = Integer.parseInt((String)combox_size.getSelectedItem());  
-                Font font = ta.getFont();     //è·å¾—æ–‡æœ¬åŒºçš„å½“å‰å­—ä½“å¯¹è±¡  
-                int style = font.getStyle();      //è·å¾—å­—å½¢  
+                Font font = ta.getFont();     //»ñµÃÎÄ±¾ÇøµÄµ±Ç°×ÖÌå¶ÔÏó  
+                int style = font.getStyle();      //»ñµÃ×ÖĞÎ  
                 ta.setFont(new Font(fontname, style, size));  
             }  
         });  
-        ////////////////////å­—å·åŠ å‡æŒ‰é’®  
+        ////////////////////×ÖºÅ¼Ó¼õ°´Å¥  
         button_larger=new JButton("A+");  
                 toolbar.add(button_larger);  
         button_larger.addActionListener(new ActionListener() {  
             public void actionPerformed(ActionEvent e) {  
-                String fontname = (String)combox_name.getSelectedItem();//è·å¾—å­—ä½“å  
-                Font font = ta.getFont();     //è·å¾—æ–‡æœ¬åŒºçš„å½“å‰å­—ä½“å¯¹è±¡  
-                int style = font.getStyle();      //è·å¾—å­—å½¢  
+                String fontname = (String)combox_name.getSelectedItem();//»ñµÃ×ÖÌåÃû  
+                Font font = ta.getFont();     //»ñµÃÎÄ±¾ÇøµÄµ±Ç°×ÖÌå¶ÔÏó  
+                int style = font.getStyle();      //»ñµÃ×ÖĞÎ  
                 int size = font.getSize()+5;  
                 ta.setFont(new Font(fontname, style, size));  
             }  
@@ -130,34 +173,34 @@ public class Texteditor extends JFrame {
         toolbar.add(button_smaller);  
         button_smaller.addActionListener(new ActionListener() {  
             public void actionPerformed(ActionEvent e) {  
-                String fontname = (String)combox_name.getSelectedItem();//è·å¾—å­—ä½“å  
-                Font font = ta.getFont();     //è·å¾—æ–‡æœ¬åŒºçš„å½“å‰å­—ä½“å¯¹è±¡  
-                int style = font.getStyle();      //è·å¾—å­—å½¢  
+                String fontname = (String)combox_name.getSelectedItem();//»ñµÃ×ÖÌåÃû  
+                Font font = ta.getFont();     //»ñµÃÎÄ±¾ÇøµÄµ±Ç°×ÖÌå¶ÔÏó  
+                int style = font.getStyle();      //»ñµÃ×ÖĞÎ  
                 int size = font.getSize()-5;  
                 ta.setFont(new Font(fontname, style, size));  
             }  
         });  
         /////////////////J  
-        /////////////////ç²—ä½“å’Œæ–œä½“  
-        checkb_bold = new JCheckBox("ç²—ä½“"); //å­—å½¢å¤é€‰æ¡†  
+        /////////////////´ÖÌåºÍĞ±Ìå  
+        checkb_bold = new JCheckBox("´ÖÌå"); //×ÖĞÎ¸´Ñ¡¿ò  
         toolbar.add(checkb_bold);  
         checkb_bold.addActionListener(new ActionListener() {  
             public void actionPerformed(ActionEvent e) {  
-                String fontname = (String)combox_name.getSelectedItem();//è·å¾—å­—ä½“å  
-                Font font = ta.getFont();     //è·å¾—æ–‡æœ¬åŒºçš„å½“å‰å­—ä½“å¯¹è±¡  
-                int style = font.getStyle();      //è·å¾—å­—å½¢  
+                String fontname = (String)combox_name.getSelectedItem();//»ñµÃ×ÖÌåÃû  
+                Font font = ta.getFont();     //»ñµÃÎÄ±¾ÇøµÄµ±Ç°×ÖÌå¶ÔÏó  
+                int style = font.getStyle();      //»ñµÃ×ÖĞÎ  
                 int size = font.getSize();  
                 style = style ^ 1;  
                 ta.setFont(new Font(fontname, style, size));  
             }  
                     });  
-        checkb_italic = new JCheckBox("æ–œä½“");  
+        checkb_italic = new JCheckBox("Ğ±Ìå");  
         toolbar.add(checkb_italic);  
         checkb_italic.addActionListener(new ActionListener() {  
             public void actionPerformed(ActionEvent e) {  
-                String fontname = (String)combox_name.getSelectedItem();//è·å¾—å­—ä½“å  
-                Font font = ta.getFont();     //è·å¾—æ–‡æœ¬åŒºçš„å½“å‰å­—ä½“å¯¹è±¡  
-                int style = font.getStyle();      //è·å¾—å­—å½¢  
+                String fontname = (String)combox_name.getSelectedItem();//»ñµÃ×ÖÌåÃû  
+                Font font = ta.getFont();     //»ñµÃÎÄ±¾ÇøµÄµ±Ç°×ÖÌå¶ÔÏó  
+                int style = font.getStyle();      //»ñµÃ×ÖĞÎ  
                 int size = font.getSize();  
                 style = style ^ 2;  
                 ta.setFont(new Font(fontname, style, size));  
@@ -165,17 +208,17 @@ public class Texteditor extends JFrame {
         });  
         ////////////////  
         JRadioButton radiob_color[];  
-        String colorstr[]={"çº¢","ç»¿","è“"};  
-        ButtonGroup bgroup_color = new ButtonGroup();      //æŒ‰é’®ç»„  
-        radiob_color = new JRadioButton[colorstr.length];  //é¢œè‰²å•é€‰æŒ‰é’®æ•°ç»„  
+        String colorstr[]={"ºì","ÂÌ","À¶"};  
+        ButtonGroup bgroup_color = new ButtonGroup();      //°´Å¥×é  
+        radiob_color = new JRadioButton[colorstr.length];  //ÑÕÉ«µ¥Ñ¡°´Å¥Êı×é  
         for (int i=0; i<radiob_color.length; i++){  
             radiob_color[i]=new JRadioButton(colorstr[i]);   
-            bgroup_color.add(radiob_color[i]); //æ·»åŠ åˆ°æŒ‰é’®ç»„  
-            toolbar.add(radiob_color[i]);     //æ·»åŠ åˆ°å·¥å…·æ   
+            bgroup_color.add(radiob_color[i]); //Ìí¼Óµ½°´Å¥×é  
+            toolbar.add(radiob_color[i]);     //Ìí¼Óµ½¹¤¾ßÀ¸  
         }          
         radiob_color[0].addActionListener(new ActionListener() {  
             public void actionPerformed(ActionEvent e) {  
-                ta.setForeground(Color.red);// è®¾ç½®é¢œè‰²  
+                ta.setForeground(Color.red);// ÉèÖÃÑÕÉ«  
             }  
         });  
         radiob_color[1].addActionListener(new ActionListener() {  
@@ -188,69 +231,67 @@ public class Texteditor extends JFrame {
                 ta.setForeground(Color.blue);  
             }  
         });  
-        ///////////////é¢œè‰²é€‰æ‹©å™¨  
-        button_color=new JButton("å…¶ä»–");  
+        ///////////////ÑÕÉ«Ñ¡ÔñÆ÷  
+        button_color=new JButton("ÆäËû");  
         toolbar.add(button_color);  
         button_color.addActionListener(new ActionListener() {  
             public void actionPerformed(ActionEvent e) {  
                 Color color;  
-                color=JColorChooser.showDialog(Texteditor.this,"é¢œè‰²é€‰æ‹©", Color.black);  
-                ta.setForeground(color);// è®¾ç½®é¢œè‰²  
+                color=JColorChooser.showDialog(Texteditor.this,"ÑÕÉ«Ñ¡Ôñ", Color.black);  
+                ta.setForeground(color);// ÉèÖÃÑÕÉ«  
             }  
         });  
-        ////////////////é¼ æ ‡äº‹ä»¶  
-        ta.addMouseListener(new MouseAdapter() {// é¼ æ ‡äº‹ä»¶å¤„ç†æ–¹æ³•ï¼Œå³å‡»å¼¹å‡ºèœå•  
+        ////////////////Êó±êÊÂ¼ş  
+        ta.addMouseListener(new MouseAdapter() {// Êó±êÊÂ¼ş´¦Àí·½·¨£¬ÓÒ»÷µ¯³ö²Ëµ¥  
             public void mouseClicked(MouseEvent e) {  
-                if (e.getModifiers() == MouseEvent.BUTTON3_MASK) // å•å‡»çš„æ˜¯é¼ æ ‡å³é”®  
-                    popupmenu.show(ta, e.getX(), e.getY()); // åœ¨é¼ æ ‡å•å‡»å¤„æ˜¾ç¤ºå¿«æ·èœå•  
+                if (e.getModifiers() == MouseEvent.BUTTON3_MASK) // µ¥»÷µÄÊÇÊó±êÓÒ¼ü  
+                    popupmenu.show(ta, e.getX(), e.getY()); // ÔÚÊó±êµ¥»÷´¦ÏÔÊ¾¿ì½İ²Ëµ¥  
             }  
         });  
         ////////////////  
-        this.addmyMenu();       //è°ƒç”¨è‡ªå®šä¹‰æ–¹æ³•ï¼Œæ·»åŠ èœå•  
+        this.addmyMenu(null);       //µ÷ÓÃ×Ô¶¨Òå·½·¨£¬Ìí¼Ó²Ëµ¥  
         this.setVisible(true);  
     }  
+    
+    
+    
   
-    private void addmyMenu() {// æ·»åŠ ä¸»èœå•ã€å¿«æ·èœå•ã€å¯¹è¯æ¡†  
-        JMenuBar menubar = new JMenuBar(); // èœå•æ   
-        this.setJMenuBar(menubar); // æ·»åŠ èœå•æ   
-        String menustr[] = { "æ–‡ä»¶", "ç¼–è¾‘", "å·¥å…·", "å¸®åŠ©" };  
+    private void addmyMenu(Object newParam) {// Ìí¼ÓÖ÷²Ëµ¥¡¢¿ì½İ²Ëµ¥¡¢¶Ô»°¿ò  
+        JMenuBar menubar = new JMenuBar(); // ²Ëµ¥À¸  
+        this.setJMenuBar(menubar); // Ìí¼Ó²Ëµ¥À¸  
+        String menustr[] = { "ÎÄ¼ş", "±à¼­", "¹¤¾ß", "°ïÖú" };  
         JMenu menu[] = new JMenu[menustr.length];  
         for (int i = 0; i < menustr.length; i++) {  
-           menu[i] = new JMenu(menustr[i]); // èœå•  
-            menubar.add(menu[i]); // èœå•æ ä¸­åŠ å…¥èœå•  
+           menu[i] = new JMenu(menustr[i]); // ²Ëµ¥  
+            menubar.add(menu[i]); // ²Ëµ¥À¸ÖĞ¼ÓÈë²Ëµ¥  
         }  
         ////////////////////////////////  
-        JMenuItem menuitem_open = new JMenuItem("æ‰“å¼€");  
-        menu[0].add(menuitem_open);  
-        menuitem_open.addActionListener(new ActionListener() {  
-            public void actionPerformed(ActionEvent e) { 
-         
-           
-
-                JFileChooser filechooser = new JFileChooser();  
+    
+        JMenuItem menuitem_open = new JMenuItem("´ò¿ª");  
+        menu[0].add(menuitem_open); 
+     
+        menuitem_open.addActionListener(new ActionListener() {
+            public void actionPerformed (ActionEvent e) { 
+            	JFileChooser filechooser = new JFileChooser();  
                 int result = filechooser.showOpenDialog(Texteditor.this);  
                 if (result == JFileChooser.APPROVE_OPTION) {  
-                    try {  
+                	try {  
                         File file = filechooser.getSelectedFile();  
                         FileReader fr = new FileReader(file);  
                         BufferedReader br = new BufferedReader(fr);  
-                        ta.setText("");  
-                        String text;  
-                        while ((text = br.readLine()) != null) {  
-                            ta.append(text); 
-                            ta.append("\n");
-                        }  
+                        open(br,ta);
                         fr.close();  
                         br.close();  
                     } catch (Exception ex) {  
-                        JOptionPane.showMessageDialog(Texteditor.this,"æ‰“å¼€æ–‡æ¡£å‡ºé”™ï¼");  
+                        JOptionPane.showMessageDialog(Texteditor.this,"´ò¿ªÎÄµµ³ö´í£¡");  
                     }  
                 }  
-                
+            }
             
-            }  
+            
         });  
-        JMenuItem menuitem_save = new JMenuItem("ä¿å­˜");  
+        
+        JMenuItem menuitem_save = new JMenuItem("±£´æ");  
         menu[0].add(menuitem_save);  
         menuitem_save.addActionListener(new ActionListener() {  
             public void actionPerformed(ActionEvent e) {  
@@ -261,17 +302,18 @@ public class Texteditor extends JFrame {
     				try				
     				{
     					FileOutputStream out=new FileOutputStream(f);
-    					out.write(ta.getText().getBytes());
+    					save(out,ta);
+    					
     				}
     				catch(Exception ex)
     				{					 
     					ex.printStackTrace();
-    				}			
+    				}				
     			}
   
             }  
         });  
-        JMenuItem menuitem_save1 = new JMenuItem("ä¿å­˜ä¸ºPDF");  
+        JMenuItem menuitem_save1 = new JMenuItem("±£´æÎªPDF");  
         menu[0].add(menuitem_save1);  
         menuitem_save1.addActionListener(new ActionListener() {  
             public void actionPerformed(ActionEvent e) {  
@@ -281,12 +323,11 @@ public class Texteditor extends JFrame {
     				File f=filechooser.getSelectedFile();
     				try				
     				{
-    					FileOutputStream out=new FileOutputStream(f);
-    					FileOutputStream out=new FileOutputStream(f);//ç¬¬ä¸€æ­¥ï¼Œåˆ›å»ºä¸€ä¸ª iTextSharp.text.Documentå¯¹è±¡çš„å®ä¾‹ï¼š
-    					Document document = new Document();//ç¬¬äºŒæ­¥ï¼Œä¸ºè¯¥Documentåˆ›å»ºä¸€ä¸ªWriterå®ä¾‹ï¼š
-    					PdfWriter writer = PdfWriter.getInstance(document, new FileOutputStream("C:\\Users\\Administrator\\Desktop\\newPDF.pdf"));//ç¬¬ä¸‰æ­¥ï¼Œæ‰“å¼€å½“å‰Document
-    			        document.open();//ç¬¬å››æ­¥ï¼Œä¸ºå½“å‰Documentæ·»åŠ å†…å®¹ï¼›
-    			        document.add(out);  //ç¬¬äº”æ­¥ï¼Œå…³é—­Document
+    					FileOutputStream out=new FileOutputStream(f);//µÚÒ»²½£¬´´½¨Ò»¸ö iTextSharp.text.Document¶ÔÏóµÄÊµÀı£º
+    					Document document = new Document();//µÚ¶ş²½£¬Îª¸ÃDocument´´½¨Ò»¸öWriterÊµÀı£º
+    					PdfWriter writer = PdfWriter.getInstance(document, new FileOutputStream("C:\\Users\\Administrator\\Desktop\\newPDF.pdf"));//µÚÈı²½£¬´ò¿ªµ±Ç°Document
+    			        document.open();//µÚËÄ²½£¬Îªµ±Ç°DocumentÌí¼ÓÄÚÈİ£»
+    			        document.add(out);  //µÚÎå²½£¬¹Ø±ÕDocument
     			        document.close();
     				}
     				catch(Exception ex)
@@ -298,26 +339,26 @@ public class Texteditor extends JFrame {
             }  
         });  
         
-        menu[0].addSeparator(); // åŠ åˆ†éš”çº¿  
-        JMenuItem menuitem_exit = new JMenuItem("é€€å‡º");  
+        menu[0].addSeparator(); // ¼Ó·Ö¸ôÏß  
+        JMenuItem menuitem_exit = new JMenuItem("ÍË³ö");  
         menu[0].add(menuitem_exit);  
-        menuitem_exit.addActionListener(new ActionListener() {// é€€å‡º  
+        menuitem_exit.addActionListener(new ActionListener() {// ÍË³ö  
                     public void actionPerformed(ActionEvent e) {  
                         System.exit(0);  
                     }  
                 });  
         /////////////////////////////  
-        JMenu menu_style = new JMenu("å­—å½¢");  
-        JCheckBoxMenuItem checkboxmenuitem_bold = new JCheckBoxMenuItem("ç²—ä½“");  
+        JMenu menu_style = new JMenu("×ÖĞÎ");  
+        JCheckBoxMenuItem checkboxmenuitem_bold = new JCheckBoxMenuItem("´ÖÌå");  
         menu_style.add(checkboxmenuitem_bold);  
-        JCheckBoxMenuItem checkboxmenuitem_italic = new JCheckBoxMenuItem("æ–œä½“");  
+        JCheckBoxMenuItem checkboxmenuitem_italic = new JCheckBoxMenuItem("Ğ±Ìå");  
         menu_style.add(checkboxmenuitem_italic);  
-        menu[1].add(menu_style); // èœå•åŠ å…¥åˆ°èœå•ä¸­æˆä¸ºäºŒçº§èœå•  
+        menu[1].add(menu_style); // ²Ëµ¥¼ÓÈëµ½²Ëµ¥ÖĞ³ÉÎª¶ş¼¶²Ëµ¥  
         checkboxmenuitem_bold.addActionListener(new ActionListener() {  
             public void actionPerformed(ActionEvent e) {  
-                String fontname = (String)combox_name.getSelectedItem();//è·å¾—å­—ä½“å  
-                Font font = ta.getFont();     //è·å¾—æ–‡æœ¬åŒºçš„å½“å‰å­—ä½“å¯¹è±¡  
-                int style = font.getStyle();      //è·å¾—å­—å½¢  
+                String fontname = (String)combox_name.getSelectedItem();//»ñµÃ×ÖÌåÃû  
+                Font font = ta.getFont();     //»ñµÃÎÄ±¾ÇøµÄµ±Ç°×ÖÌå¶ÔÏó  
+                int style = font.getStyle();      //»ñµÃ×ÖĞÎ  
                 int size = font.getSize();  
                 style = style ^ 1;  
                 ta.setFont(new Font(fontname, style, size));  
@@ -326,22 +367,22 @@ public class Texteditor extends JFrame {
           
         checkboxmenuitem_italic.addActionListener(new ActionListener() {  
             public void actionPerformed(ActionEvent e) {  
-                String fontname = (String)combox_name.getSelectedItem();//è·å¾—å­—ä½“å  
-                Font font = ta.getFont();     //è·å¾—æ–‡æœ¬åŒºçš„å½“å‰å­—ä½“å¯¹è±¡  
-                int style = font.getStyle();      //è·å¾—å­—å½¢  
+                String fontname = (String)combox_name.getSelectedItem();//»ñµÃ×ÖÌåÃû  
+                Font font = ta.getFont();     //»ñµÃÎÄ±¾ÇøµÄµ±Ç°×ÖÌå¶ÔÏó  
+                int style = font.getStyle();      //»ñµÃ×ÖĞÎ  
                 int size = font.getSize();  
                 style = style ^ 2;  
                 ta.setFont(new Font(fontname, style, size));  
             }  
         });  
         ////////////////////////////  
-        JMenu menu_color = new JMenu("é¢œè‰²");  
+        JMenu menu_color = new JMenu("ÑÕÉ«");  
         menu[1].add(menu_color);  
         ButtonGroup buttongroup = new ButtonGroup();  
-        String colorstr[] = { "çº¢", "ç»¿", "è“" };  
+        String colorstr[] = { "ºì", "ÂÌ", "À¶" };  
         JRadioButtonMenuItem rbmi_color[] = new JRadioButtonMenuItem[colorstr.length];  
         for (int i = 0; i < rbmi_color.length; i++) {  
-            rbmi_color[i] = new JRadioButtonMenuItem(colorstr[i]); // å•é€‰èœå•é¡¹  
+            rbmi_color[i] = new JRadioButtonMenuItem(colorstr[i]); // µ¥Ñ¡²Ëµ¥Ïî  
             buttongroup.add(rbmi_color[i]);  
             menu_color.add(rbmi_color[i]);  
         }  
@@ -361,7 +402,7 @@ public class Texteditor extends JFrame {
             }  
         });  
         /////////////////////////////////  
-        JMenuItem menuitem_countwordsnum = new JMenuItem("å­—æ•°ç»Ÿè®¡");  
+        JMenuItem menuitem_countwordsnum = new JMenuItem("×ÖÊıÍ³¼Æ");  
         menu[2].add(menuitem_countwordsnum);  
         menuitem_countwordsnum.addActionListener(new ActionListener() {  
             public void actionPerformed(ActionEvent e) {  
@@ -371,64 +412,55 @@ public class Texteditor extends JFrame {
                         count++;  
                     }  
                 }  
-                JOptionPane.showMessageDialog(Texteditor.this, "æ–‡æœ¬æ¡†ä¸­ä¸€å…±æœ‰"+count+"ä¸ªå­—ç¬¦ï¼");  
+                JOptionPane.showMessageDialog(Texteditor.this, "ÎÄ±¾¿òÖĞÒ»¹²ÓĞ"+count+"¸ö×Ö·û£¡");  
             }  
         });
-        JMenuItem menuitem_countwordsnum1 = new JMenuItem("å‰ªåˆ‡");  
+        JMenuItem menuitem_countwordsnum1 = new JMenuItem("¼ôÇĞ");  
         menu[2].add(menuitem_countwordsnum1);  
         menuitem_countwordsnum1.addActionListener(new ActionListener() {  
             public void actionPerformed(ActionEvent e) {  
             	ta.cut();
             	}
         });  
-        JMenuItem menuitem_countwordsnum2 = new JMenuItem("å¤åˆ¶");  
+        JMenuItem menuitem_countwordsnum2 = new JMenuItem("¸´ÖÆ");  
         menu[2].add(menuitem_countwordsnum2);  
         menuitem_countwordsnum2.addActionListener(new ActionListener() {  
             public void actionPerformed(ActionEvent e) {  
             	ta.copy();
             	}
         });  
-        JMenuItem menuitem_countwordsnum3= new JMenuItem("ç²˜ç²˜");  
+        JMenuItem menuitem_countwordsnum3= new JMenuItem("Õ³Õ³");  
         menu[2].add(menuitem_countwordsnum3);  
         menuitem_countwordsnum3.addActionListener(new ActionListener() {  
             public void actionPerformed(ActionEvent e) {  
             	ta.paste();
             	}
         });  
-        menu[2].addSeparator(); // åŠ åˆ†éš”çº¿  
-        JMenuItem menuitem_search = new JMenuItem("æŸ¥æ‰¾");  
+        menu[2].addSeparator(); // ¼Ó·Ö¸ôÏß  
+        JMenuItem menuitem_search = new JMenuItem("²éÕÒ");  
         menu[2].add(menuitem_search);  
         menuitem_search.addActionListener(new ActionListener() {  
             public void actionPerformed(ActionEvent e) {  
                 new MessageJDialog();  
                   
                 button_next.addActionListener(new ActionListener() {  
-                    public void actionPerformed(ActionEvent e) {  
-                        String str_search=tf_search.getText();  
-                        int len = str_search.length();  
-                        for (int i = key; i < ta.getText().length() - len + 1; i++) {  
-                            String str_record = ta.getText().substring(i, i + len);  
-                            if (str_record.equals(str_search)) {  
-                                key = i + 1;  
-                                ta.requestFocus();  
-                                ta.select(i, i + len);  
-                                return;  
-                            }  
-                        }  
+                    public void actionPerformed(ActionEvent e) {
+                    	String str_search=tf_search.getText(); 
+                       search(str_search,ta);
                     }  
                 });  
                   
                 key=0;  
             }  
         });  
-        JMenuItem menuitem_replace = new JMenuItem("æ›¿æ¢");  
+        JMenuItem menuitem_replace = new JMenuItem("Ìæ»»");  
         menu[2].add(menuitem_replace);  
         menuitem_replace.addActionListener(new ActionListener() {  
             public void actionPerformed(ActionEvent e) {  
                 String str_replace=JOptionPane.showInputDialog(Texteditor.this,  
-                        "è¯·è¾“å…¥ä½ è¦æ›¿æ¢çš„å­—ç¬¦ä¸²:" );  
+                        "ÇëÊäÈëÄãÒªÌæ»»µÄ×Ö·û´®:" );  
                 String str_replacelater=JOptionPane.showInputDialog(Texteditor.this,  
-                        "è¯·è¾“å…¥ä½ è¦ç”¨æ¥æ›¿æ¢çš„å†…å®¹:" );  
+                        "ÇëÊäÈëÄãÒªÓÃÀ´Ìæ»»µÄÄÚÈİ:" );  
                 int len=str_replace.length();  
                 for(int i=0;i<ta.getText().length()-len+1;i++){  
                     String str_record=ta.getText().substring(i, i+len);  
@@ -439,14 +471,14 @@ public class Texteditor extends JFrame {
             }  
         });  
         /////////////////////////////////  
-        JMenuItem menuitem_about = new JMenuItem("å…³äº");  
+        JMenuItem menuitem_about = new JMenuItem("¹ØÓÚ");  
         menu[3].add(menuitem_about);  
         menuitem_about.addActionListener(new ActionListener() {  
             public void actionPerformed(ActionEvent e) {  
-                JOptionPane.showMessageDialog(Texteditor.this,"æ–‡æœ¬ç¼–è¾‘å™¨v1.0   å¼€å‘è€…ï¼šç‹å˜‰å®,åˆ˜ä½³çª");  
+                JOptionPane.showMessageDialog(Texteditor.this,"ÎÄ±¾±à¼­Æ÷v1.0   ¿ª·¢Õß£ºÍõ¼ÎÄş,Áõ¼Ñç÷");  
             }  
         }); 
-        JMenuItem menuitem_about1 = new JMenuItem("æ—¶é—´");  
+        JMenuItem menuitem_about1 = new JMenuItem("Ê±¼ä");  
         menu[3].add(menuitem_about1);  
         menuitem_about1.addActionListener(new ActionListener() {  
             public void actionPerformed(ActionEvent e) {  
@@ -463,31 +495,31 @@ public class Texteditor extends JFrame {
   		}		
              
         });  
-        JMenuItem menuitem_about2 = new JMenuItem("æ‰“å°");  
+        JMenuItem menuitem_about2 = new JMenuItem("´òÓ¡");  
         menu[3].add(menuitem_about2);  
         menuitem_about2.addActionListener(new ActionListener() {  
         	public void actionPerformed(ActionEvent e) {
     			// TODO Auto-generated method stub
-    			JFileChooser fileChooser = new JFileChooser(); // åˆ›å»ºæ‰“å°ä½œä¸š
+    			JFileChooser fileChooser = new JFileChooser(); // ´´½¨´òÓ¡×÷Òµ
     	        int state = fileChooser.showOpenDialog(null);
     	        if (state == fileChooser.APPROVE_OPTION) {
-    	            File file = fileChooser.getSelectedFile(); // è·å–é€‰æ‹©çš„æ–‡ä»¶
-    	            // æ„å»ºæ‰“å°è¯·æ±‚å±æ€§é›†
+    	            File file = fileChooser.getSelectedFile(); // »ñÈ¡Ñ¡ÔñµÄÎÄ¼ş
+    	            // ¹¹½¨´òÓ¡ÇëÇóÊôĞÔ¼¯
     	            HashPrintRequestAttributeSet pras = new HashPrintRequestAttributeSet();
-    	            // è®¾ç½®æ‰“å°æ ¼å¼ï¼Œå› ä¸ºæœªç¡®å®šç±»å‹ï¼Œæ‰€ä»¥é€‰æ‹©autosense
+    	            // ÉèÖÃ´òÓ¡¸ñÊ½£¬ÒòÎªÎ´È·¶¨ÀàĞÍ£¬ËùÒÔÑ¡Ôñautosense
     	            DocFlavor flavor = DocFlavor.INPUT_STREAM.AUTOSENSE;
-    	            // æŸ¥æ‰¾æ‰€æœ‰çš„å¯ç”¨çš„æ‰“å°æœåŠ¡
+    	            // ²éÕÒËùÓĞµÄ¿ÉÓÃµÄ´òÓ¡·şÎñ
     	            PrintService printService[] = PrintServiceLookup.lookupPrintServices(flavor, pras);
-    	            // å®šä½é»˜è®¤çš„æ‰“å°æœåŠ¡
+    	            // ¶¨Î»Ä¬ÈÏµÄ´òÓ¡·şÎñ
     	            PrintService defaultService = PrintServiceLookup
     	                    .lookupDefaultPrintService();
-    	            // æ˜¾ç¤ºæ‰“å°å¯¹è¯æ¡†
+    	            // ÏÔÊ¾´òÓ¡¶Ô»°¿ò
     	            PrintService service = ServiceUI.printDialog(null, 200, 200,
     	                    printService, defaultService, flavor, pras);
     	            if (service != null) {
     	                try {
-    	                    DocPrintJob job = service.createPrintJob(); // åˆ›å»ºæ‰“å°ä½œä¸š
-    	                    FileInputStream fis = new FileInputStream(file); // æ„é€ å¾…æ‰“å°çš„æ–‡ä»¶æµ
+    	                    DocPrintJob job = service.createPrintJob(); // ´´½¨´òÓ¡×÷Òµ
+    	                    FileInputStream fis = new FileInputStream(file); // ¹¹Ôì´ı´òÓ¡µÄÎÄ¼şÁ÷
     	                    DocAttributeSet das = new HashDocAttributeSet();
     	                    Doc doc = new SimpleDoc(fis, flavor, das);
     	                    job.print(doc, pras);
@@ -498,37 +530,37 @@ public class Texteditor extends JFrame {
     	        }
         	}
         }); 
-        ////////////////////////////////////////////////// å¿«æ·èœå•å¯¹è±¡  
+        ////////////////////////////////////////////////// ¿ì½İ²Ëµ¥¶ÔÏó  
         popupmenu = new JPopupMenu();  
-        String menuitemstr[] = { "å‰ªåˆ‡", "å¤åˆ¶", "ç²˜è´´" };  
+        String menuitemstr[] = { "¼ôÇĞ", "¸´ÖÆ", "Õ³Ìù" };  
         JMenuItem popmenuitem[] = new JMenuItem[menuitemstr.length];  
         for (int i = 0; i < popmenuitem.length; i++) {  
-            popmenuitem[i] = new JMenuItem(menuitemstr[i]);// èœå•é¡¹  
-            popupmenu.add(popmenuitem[i]);// å¿«æ·èœå•åŠ å…¥èœå•é¡¹  
+            popmenuitem[i] = new JMenuItem(menuitemstr[i]);// ²Ëµ¥Ïî  
+            popupmenu.add(popmenuitem[i]);// ¿ì½İ²Ëµ¥¼ÓÈë²Ëµ¥Ïî  
         }  
         popmenuitem[0].setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_X,  
-                InputEvent.CTRL_MASK));// è®¾ç½®å¿«æ·é”®Ctrl+X  
+                InputEvent.CTRL_MASK));// ÉèÖÃ¿ì½İ¼üCtrl+X  
         popmenuitem[1].setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C,  
-                InputEvent.CTRL_MASK));// è®¾ç½®å¿«æ·é”®Ctrl+C  
+                InputEvent.CTRL_MASK));// ÉèÖÃ¿ì½İ¼üCtrl+C  
         popmenuitem[2].setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_V,  
-                InputEvent.CTRL_MASK));// è®¾ç½®å¿«æ·é”®Ctrl+V  
+                InputEvent.CTRL_MASK));// ÉèÖÃ¿ì½İ¼üCtrl+V  
   
         popmenuitem[0].addActionListener(new ActionListener() {  
             public void actionPerformed(ActionEvent e) {  
-                ta.cut(); //å°†é€‰ä¸­æ–‡æœ¬å‰ªåˆ‡é€ç³»ç»Ÿå‰ªè´´æ¿  
+                ta.cut(); //½«Ñ¡ÖĞÎÄ±¾¼ôÇĞËÍÏµÍ³¼ôÌù°å  
             }  
         });  
         popmenuitem[1].addActionListener(new ActionListener() {  
             public void actionPerformed(ActionEvent e) {  
-                ta.copy(); //å°†é€‰ä¸­æ–‡æœ¬å¤åˆ¶é€ç³»ç»Ÿå‰ªè´´æ¿  
+                ta.copy(); //½«Ñ¡ÖĞÎÄ±¾¸´ÖÆËÍÏµÍ³¼ôÌù°å  
             }  
         });  
         popmenuitem[2].addActionListener(new ActionListener() {  
             public void actionPerformed(ActionEvent e) {  
-                ta.paste();//å‰ªè´´æ¿çš„æ–‡æœ¬ç²˜è´´åœ¨å½“å‰ä½ç½®  
+                ta.paste();//¼ôÌù°åµÄÎÄ±¾Õ³ÌùÔÚµ±Ç°Î»ÖÃ  
             }  
         });  
-        ta.add(popupmenu); // æ–‡æœ¬åŒºæ·»åŠ å¿«æ·èœå•  
+        ta.add(popupmenu); // ÎÄ±¾ÇøÌí¼Ó¿ì½İ²Ëµ¥  
     }  
   
     //  
@@ -539,27 +571,27 @@ public class Texteditor extends JFrame {
         private JPanel panel_tip = new JPanel();  
   
         public MessageJDialog() {  
-            super(Texteditor.this, "æŸ¥æ‰¾");  
+            super(Texteditor.this, "²éÕÒ");  
             this.setSize(300, 170);  
             this.setLocation(Texteditor.this.getX() + 200,  
                     Texteditor.this.getY() + 200);  
             this.setLayout(new GridLayout(3, 1));  
             //  
             ImageIcon imageIcon = new ImageIcon("img/search.png");  
-            lable_tip = new JLabel("è¯·è¾“å…¥ä½ è¦æŸ¥æ‰¾çš„å­—ç¬¦ä¸²ï¼š", imageIcon, JLabel.LEFT);  
+            lable_tip = new JLabel("ÇëÊäÈëÄãÒª²éÕÒµÄ×Ö·û´®£º", imageIcon, JLabel.LEFT);  
             panel_tip.add(lable_tip);  
             this.add(panel_tip);  
             tf_search = new JTextField(20);  
             panel_search.add(tf_search);  
             this.add(panel_search);  
-            button_next = new JButton("æŸ¥æ‰¾ä¸‹ä¸€ä¸ª");  
+            button_next = new JButton("²éÕÒÏÂÒ»¸ö");  
             panel_next.add(button_next);  
             this.add(panel_next);  
             this.setVisible(true);  
         }  
     }        
     public static void main(String args[]) {  
-        new Texteditor("æ–‡æœ¬ç¼–è¾‘å™¨v1.0");  
+        new Texteditor("ÎÄ±¾±à¼­Æ÷v1.0");  
     }  
 }  
 
