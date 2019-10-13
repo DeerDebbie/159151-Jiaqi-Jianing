@@ -556,3 +556,24 @@ public class Texteditor extends JFrame {
     }  
 }  
 
+public void JSONfunction(JMenu menu){
+	String path = "aaa.json";
+	String s = ReadFile(path);   
+	
+	JSONObject jobj = JSON.parseObject(s);
+//	System.out.println("font"+jobj.get("font"));
+	String color1=(String)jobj.get("color1");
+//	  System.out.println("color1"+jobj.get("color1"));
+//	  System.out.println("color2"+jobj.get("color2"));
+//	  System.out.println("color3"+jobj.get("color3"));
+//	  System.out.println("color4"+jobj.get("color4"));
+	   
+	int color = Integer.parseInt(color1);
+//    int fontSize = Integer.parseInt(buttonFontSize);
+	menu.setForeground(new Color(color));
+//	  menu.setFont(new Font(font,Font.BOLD|Font.ITALIC,20));
+//    JTextArea.setForeground(new Color(color));   
+//   
+//    popupMenu.setForeground(color1);
+//    fileMenu_New.setForeground(color1);
+}
